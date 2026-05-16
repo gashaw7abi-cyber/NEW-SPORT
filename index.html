@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <link rel="manifest" href="/manifest.json" />
+    <title>NEW SPORT</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+      body { background-color: #0f172a; color: white; }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+        <div style="padding: 20px; font-family: sans-serif;">Loading app...</div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').then((registration) => {
+            console.log('SW registered: ', registration);
+            if ('periodicSync' in registration) {
+              navigator.permissions.query({
+                name: 'periodic-background-sync',
+              }).then((status) => {
+                if (status.state === 'granted') {
+                  registration.periodicSync.register('update', {
+                    minInterval: 24 * 60 * 60 * 1000,
+                  }).then(() => console.log('Periodic sync registered'))
+                  .catch((err) => console.log('Periodic sync failed', err));
+                }
+              }).catch(() => {});
+            }
+          }).catch((registrationError) => {
+            console.log('SW registration failed: ', registrationError);
+          });
+        });
+      }
+    </script>
+  </body>
+</html>
+

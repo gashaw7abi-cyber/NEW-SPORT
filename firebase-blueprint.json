@@ -1,0 +1,57 @@
+{
+  "entities": {
+    "NewsPost": {
+      "title": "NewsPost",
+      "description": "A custom sports news article posted by the admin",
+      "type": "object",
+      "properties": {
+        "headline": { "type": "string" },
+        "description": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "videoUrl": { "type": "string" },
+        "publishedAt": { "type": "number", "description": "Server timestamp" },
+        "authorEmail": { "type": "string" },
+        "published": { "type": "boolean" }
+      },
+      "required": ["headline", "description", "publishedAt", "authorEmail", "published"]
+    },
+    "Session": {
+      "title": "Session",
+      "description": "Active user session",
+      "type": "object",
+      "properties": {
+        "lastActive": { "type": "number", "description": "Server timestamp" }
+      },
+      "required": ["lastActive"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "A user-managed task",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" },
+        "userId": { "type": "string" },
+        "clientTaskId": { "type": "string", "description": "Unique ID provided by client for idempotency" }
+      },
+      "required": ["title", "status", "createdAt", "updatedAt", "userId"]
+    }
+  },
+  "firestore": {
+    "/customNews/{newsId}": {
+      "schema": { "$ref": "#/entities/NewsPost" },
+      "description": "Custom sports news added by the admin"
+    },
+    "/sessions/{sessionId}": {
+      "schema": { "$ref": "#/entities/Session" },
+      "description": "Active user sessions for tracking online users"
+    },
+    "/tasks/{taskId}": {
+      "schema": { "$ref": "#/entities/Task" },
+      "description": "User tasks"
+    }
+  }
+}

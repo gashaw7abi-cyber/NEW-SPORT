@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} { 
+      allow read, write: if false; 
+    }
+
+    function isAdmin() { 
+      return request.auth != null && 
+             request.auth.token.email_verified == true && 
+             request.auth.token.email == 'gashaw7abi@gmail.com'; 
+    }
+
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+    
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    function isValidNewsPost(data) {
+      return data.keys().hasAll(['headline', 'description', 'publishedAt', 'authorEmail', 'published']) &&
+             (data.keys().hasOnly(['headline', 'description', 'imageUrl', 'videoUrl', 'publishedAt', 'authorEmail', 'published'])) &&
+             data.headline is string && data.headline.size() >= 1 && data.headline.size() <= 300 &&
+             data.description is string && data.description.size() >= 1 && data.description.size() <= 20000 &&
+             (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() <= 2000)) &&
+             (!('videoUrl' in data) || (data.videoUrl is string && data.videoUrl.size() <= 2000)) &&
+             data.publishedAt is timestamp &&
+             data.authorEmail is string && data.authorEmail == request.auth.token.email && data.authorEmail.size() <= 254 &&
+             data.published is bool;
+    }
+
+    match /customNews/{newsId} {
+      allow get: if existing().published == true || isAdmin();
+      allow list: if existing().published == true || isAdmin();
+      
+      allow create: if isAdmin() && 
+                       isValidId(newsId) && 
+                       isValidNewsPost(incoming());
+                       
+      allow update: if isAdmin() && 
+                       isValidId(newsId) && 
+                       isValidNewsPost(incoming()) && 
+                       incoming().diff(existing()).affectedKeys().hasOnly(['headline', 'description', 'imageUrl', 'videoUrl', 'published']) &&
+                       incoming().authorEmail == existing().authorEmail &&
+                       incoming().publishedAt == existing().publishedAt;
+                       
+      allow delete: if isAdmin() && isValidId(newsId);
+    }
+  }
+}

@@ -1,0 +1,120 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} { 
+      allow read, write: if false; 
+    }
+
+    function isAdmin() { 
+      return request.auth != null && 
+             request.auth.token.email_verified == true && 
+             request.auth.token.email == 'gashaw7abi@gmail.com'; 
+    }
+
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+    
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    function isValidNewsPost(data) {
+      return data.keys().hasAll(['headline', 'description', 'publishedAt', 'authorEmail', 'published']) &&
+             (data.keys().hasOnly(['headline', 'description', 'imageUrl', 'videoUrl', 'publishedAt', 'authorEmail', 'published'])) &&
+             data.headline is string && data.headline.size() >= 1 && data.headline.size() <= 300 &&
+             data.description is string && data.description.size() >= 1 && data.description.size() <= 20000 &&
+             (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() <= 2000)) &&
+             (!('videoUrl' in data) || (data.videoUrl is string && data.videoUrl.size() <= 2000)) &&
+             data.publishedAt is timestamp &&
+             data.authorEmail is string && data.authorEmail == request.auth.token.email && data.authorEmail.size() <= 254 &&
+             data.published is bool;
+    }
+
+    // Update access for customNews to be more explicitly defined
+    match /customNews/{newsId} {
+      allow get: if resource.data.published == true || isAdmin();
+      allow list: if resource.data.published == true || isAdmin();
+      
+      allow create: if isAdmin() && 
+                       isValidId(newsId) && 
+                       isValidNewsPost(incoming());
+                       
+      allow update: if isAdmin() && 
+                       isValidId(newsId) && 
+                       isValidNewsPost(incoming()) && 
+                       incoming().diff(existing()).affectedKeys().hasOnly(['headline', 'description', 'imageUrl', 'videoUrl', 'published']) &&
+                       incoming().authorEmail == existing().authorEmail &&
+                       incoming().publishedAt == existing().publishedAt;
+                       
+      allow delete: if isAdmin() && isValidId(newsId);
+    }
+    function isValidSession(data) {
+      return data.keys().hasAll(['lastActive']) &&
+             data.keys().hasOnly(['lastActive']) &&
+             data.lastActive is timestamp;
+    }
+
+    function isValidTask(data) {
+      return data.keys().hasAll(['title', 'status', 'createdAt', 'updatedAt', 'userId']) &&
+             data.keys().hasOnly(['title', 'description', 'status', 'createdAt', 'updatedAt', 'userId', 'clientTaskId']) &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 2000)) &&
+             data.status is string && (data.status == 'pending' || data.status == 'completed') &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp &&
+             data.userId is string && data.userId == request.auth.uid &&
+             (!('clientTaskId' in data) || (data.clientTaskId is string && data.clientTaskId.size() <= 128));
+    }
+
+    function isValidFcmToken(data) {
+      return data.keys().hasAll(['token', 'createdAt']) &&
+             data.keys().hasOnly(['token', 'createdAt']) &&
+             data.token is string && data.token.size() >= 1 && data.token.size() <= 1000 &&
+             data.createdAt is timestamp;
+    }
+
+    match /fcmTokens/{tokenId} {
+      allow read: if isAdmin();
+      allow create: if isValidFcmToken(incoming()) && incoming().createdAt == request.time;
+      allow delete: if isAdmin() || true; // allow device to delete themselves if they want, but usually tokens just sit
+    }
+
+    match /tasks/{taskId} {
+      allow get, list: if request.auth != null && resource.data.userId == request.auth.uid;
+
+      allow create: if request.auth != null &&
+                       isValidId(taskId) &&
+                       isValidTask(incoming()) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().createdAt == request.time &&
+                       incoming().updatedAt == request.time;
+
+      allow update: if request.auth != null &&
+                       isValidTask(incoming()) &&
+                       resource.data.userId == request.auth.uid &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().updatedAt == request.time &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().clientTaskId == existing().clientTaskId;
+
+      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    match /sessions/{sessionId} {
+      // Allow anyone to read all sessions
+      allow read: if true;
+      
+      // Allow creation with valid data
+      allow create: if isValidId(sessionId) && 
+                       isValidSession(incoming()) && 
+                       incoming().lastActive == request.time;
+                       
+      // Allow updating only their own lastActive time
+      allow update: if isValidId(sessionId) && 
+                       isValidSession(incoming()) && 
+                       incoming().diff(existing()).affectedKeys().hasOnly(['lastActive']);
+                       
+      allow delete: if isValidId(sessionId);
+    }
+  }
+}
