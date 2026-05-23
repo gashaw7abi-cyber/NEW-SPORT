@@ -1,4 +1,4 @@
-const CACHE_NAME = 'big-sports-v2';
+const CACHE_NAME = 'big-sports-v3';
 const OFFLINE_URL = '/offline.html';
 
 self.addEventListener('install', (event) => {
@@ -38,6 +38,12 @@ self.addEventListener('fetch', (event) => {
         return caches.match(OFFLINE_URL);
       })
     );
+    return;
+  }
+  
+  // Do not intercept or cache API requests
+  const url = new URL(event.request.url);
+  if (url.pathname.startsWith('/api/')) {
     return;
   }
   
