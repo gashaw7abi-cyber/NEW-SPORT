@@ -513,12 +513,6 @@ function App() {
       <header className="bg-[#1e293b] border-b border-slate-700/50 sticky top-0 z-50 shadow-lg relative">
         <div className="px-5 py-4 max-w-md mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 -ml-2 text-slate-400 hover:text-emerald-400 transition-colors"
-            >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
             <div className="w-10 h-10 rounded-full overflow-hidden shadow-lg shadow-emerald-500/20 bg-emerald-500">
               <img src="https://i.postimg.cc/g29Gpg7r/1778746810882.jpg" alt="NEW SPORT Logo" className="w-full h-full object-cover" />
             </div>
@@ -534,42 +528,12 @@ function App() {
                 <span className="text-xs font-bold text-emerald-400">{activeUsersCount}</span>
               </div>
             )}
-            
             <button 
-              onClick={handlePushOptIn}
-              className={`p-2 transition-colors rounded-xl ${pushEnabled ? 'text-emerald-400 bg-emerald-500/10' : 'text-slate-500 hover:text-emerald-400'}`}
-              title={pushEnabled ? "Notifications Enabled" : "Enable Push Notifications"}
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2 -mr-2 text-slate-400 hover:text-emerald-400 transition-colors"
             >
-              {pushEnabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
-
-            {!user ? (
-               <button onClick={handleLogin} className="p-2 text-slate-500 hover:text-emerald-400 transition-colors" title="Admin Login">
-                 <Lock className="w-5 h-5" />
-               </button>
-            ) : (
-               <div className="flex items-center gap-2">
-                 {isAdmin && (
-                   <button 
-                     onClick={() => setActiveTab('admin')} 
-                     className={`p-2 transition-colors ${activeTab === 'admin' ? 'text-emerald-400 bg-emerald-500/10 rounded-full' : 'text-slate-400 hover:text-emerald-400'}`}
-                     title="Admin"
-                   >
-                     Admin
-                   </button>
-                 )}
-                 <button 
-                   onClick={() => setActiveTab('profile')}
-                   className={`p-2 transition-colors ${activeTab === 'profile' ? 'text-emerald-400 bg-emerald-500/10 rounded-full' : 'text-slate-400 hover:text-emerald-400'}`}
-                   title="Profile"
-                 >
-                   <UserCircle className="w-5 h-5" />
-                 </button>
-                 <button onClick={handleLogout} className="p-2 text-slate-400 hover:text-red-400 transition-colors" title="Logout">
-                   <LogOut className="w-5 h-5" />
-                 </button>
-               </div>
-            )}
           </div>
         </div>
         
@@ -599,6 +563,63 @@ function App() {
                 <Trophy className="w-5 h-5" />
                 <span className="font-bold uppercase tracking-widest text-sm">Scores</span>
               </button>
+              <div className="h-px bg-slate-700/50 my-2"></div>
+              
+              <button 
+                onClick={() => { handlePushOptIn(); setIsMenuOpen(false); }}
+                className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
+                  pushEnabled 
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                }`}
+              >
+                {pushEnabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
+                <span className="font-bold uppercase tracking-widest text-sm">Notifications</span>
+              </button>
+              
+              {!user ? (
+                 <button 
+                   onClick={() => { handleLogin(); setIsMenuOpen(false); }} 
+                   className="flex items-center gap-3 p-3 rounded-xl transition-all text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                 >
+                   <Lock className="w-5 h-5" />
+                   <span className="font-bold uppercase tracking-widest text-sm">Admin Login</span>
+                 </button>
+              ) : (
+                 <>
+                   {isAdmin && (
+                     <button 
+                       onClick={() => { setActiveTab('admin'); setIsMenuOpen(false); }} 
+                       className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
+                         activeTab === 'admin' 
+                           ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                           : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                       }`}
+                     >
+                       <Lock className="w-5 h-5" />
+                       <span className="font-bold uppercase tracking-widest text-sm">Admin Panel</span>
+                     </button>
+                   )}
+                   <button 
+                     onClick={() => { setActiveTab('profile'); setIsMenuOpen(false); }}
+                     className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
+                       activeTab === 'profile' 
+                         ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                         : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                     }`}
+                   >
+                     <UserCircle className="w-5 h-5" />
+                     <span className="font-bold uppercase tracking-widest text-sm">Profile</span>
+                   </button>
+                   <button 
+                     onClick={() => { handleLogout(); setIsMenuOpen(false); }} 
+                     className="flex items-center gap-3 p-3 rounded-xl transition-all text-red-500 hover:bg-red-500/10"
+                   >
+                     <LogOut className="w-5 h-5" />
+                     <span className="font-bold uppercase tracking-widest text-sm">Logout</span>
+                   </button>
+                 </>
+              )}
             </div>
           </div>
         )}
