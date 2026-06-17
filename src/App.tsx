@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, Newspaper, ChevronRight, Lock, Plus, Trash2, LogOut, Upload, Users, Bell, BellOff, UserCircle, Save, Share2 } from 'lucide-react';
+import { Trophy, Newspaper, ChevronRight, Lock, Plus, Trash2, LogOut, Upload, Users, Bell, BellOff, UserCircle, Save, Share2, Menu, X } from 'lucide-react';
 import { auth, db, storage, getMessagingInstance } from './firebase';
 import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User, updateProfile } from 'firebase/auth';
 import { collection, query, orderBy, where, getDocs, addDoc, deleteDoc, doc, serverTimestamp, Timestamp, updateDoc, onSnapshot, setDoc } from 'firebase/firestore';
@@ -65,6 +65,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // Profile Form state
   const [profileName, setProfileName] = useState('');
@@ -509,9 +510,15 @@ function App() {
   return (
     <div className="min-h-screen bg-[#0f172a] text-slate-200 font-sans pb-24">
       {/* Header */}
-      <header className="bg-[#1e293b] border-b border-slate-700/50 sticky top-0 z-50 shadow-lg">
+      <header className="bg-[#1e293b] border-b border-slate-700/50 sticky top-0 z-50 shadow-lg relative">
         <div className="px-5 py-4 max-w-md mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2 -ml-2 text-slate-400 hover:text-emerald-400 transition-colors"
+            >
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
             <div className="w-10 h-10 rounded-full overflow-hidden shadow-lg shadow-emerald-500/20 bg-emerald-500">
               <img src="https://i.postimg.cc/g29Gpg7r/1778746810882.jpg" alt="NEW SPORT Logo" className="w-full h-full object-cover" />
             </div>
@@ -565,6 +572,36 @@ function App() {
             )}
           </div>
         </div>
+        
+        {/* Dropdown Menu */}
+        {isMenuOpen && (
+          <div className="absolute top-full left-0 right-0 bg-[#1e293b] border-b border-slate-700/50 shadow-2xl z-40">
+            <div className="max-w-md mx-auto p-4 flex flex-col gap-2">
+              <button 
+                onClick={() => { setActiveTab('news'); setIsMenuOpen(false); }}
+                className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
+                  activeTab === 'news' 
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                }`}
+              >
+                <Newspaper className="w-5 h-5" />
+                <span className="font-bold uppercase tracking-widest text-sm">News</span>
+              </button>
+              <button 
+                onClick={() => { setActiveTab('scores'); setIsMenuOpen(false); }}
+                className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
+                  activeTab === 'scores' 
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                }`}
+              >
+                <Trophy className="w-5 h-5" />
+                <span className="font-bold uppercase tracking-widest text-sm">Scores</span>
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Main Content */}
@@ -1211,33 +1248,6 @@ function App() {
           </div>
         )}
       </main>
-
-      {/* Bottom Nav */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-[#0f172a]/90 backdrop-blur-xl border-t border-slate-700/50 z-50 pb-safe">
-        <div className="max-w-md mx-auto flex p-2">
-          <button 
-            onClick={() => setActiveTab('news')}
-            className={`flex-1 py-4 flex flex-col items-center gap-1.5 rounded-2xl transition-all ${
-              activeTab === 'news' 
-                ? 'bg-[#1e293b] text-emerald-400 shadow-lg border border-slate-700/50' 
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Newspaper className="w-6 h-6" />
-            <span className="text-[10px] font-black uppercase tracking-widest">News</span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('scores')}
-            className={`flex-1 py-4 flex flex-col items-center gap-1.5 rounded-2xl transition-all ${
-              activeTab === 'scores' 
-                ? 'bg-[#1e293b] text-emerald-400 shadow-lg border border-slate-700/50' 
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <span className="text-[10px] font-black uppercase tracking-widest">Scores</span>
-          </button>
-        </div>
-      </nav>
     </div>
   );
 }
